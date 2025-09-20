@@ -1,0 +1,10 @@
+{
+  "tests": [
+    "a",
+    "s",
+    "b"
+  ],
+  "multitest": false,
+  "test": "a",
+  "filename": "accel"
+}
