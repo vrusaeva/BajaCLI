@@ -46,17 +46,24 @@ class Network:
         data = key.data
         if mask & selectors.EVENT_READ:
             received = socket.recv(1024)
+            # untested close operation
+            if received.decode() == "close":
+                print("Resetting server")
+                self.sel.close
             if received:
                 data.out += received # adds data to output queue
             else: # end of test operation
                 print("Closing connection")
                 self.sel.unregister(socket)
                 socket.close()
+                return
         if mask & selectors.EVENT_WRITE:
             if data.out:
                 print("Echoing")
+                print(data.out)
                 sent = socket.send(data.out)
                 data.out = data.out[sent:] # removes sent data from output queue
+                return
 
 
 nw = Network()

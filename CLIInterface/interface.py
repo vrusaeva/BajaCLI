@@ -2,6 +2,7 @@ import json
 import socket
 import selectors
 import types
+import csv
 
 # Simple CLI-based interface to run VT Baja tests.
 # 
@@ -36,9 +37,9 @@ class CLIInterface:
 
         data = types.SimpleNamespace(
             id = 0,
-            message = "test" + code,
+            message = code,
             received = b"",
-            out = b"",
+            out = code.encode('utf-8'),
         )
 
         self.sel.register(connection, events=self.events, data=data)
@@ -50,50 +51,56 @@ class CLIInterface:
         if mask & selectors.EVENT_READ:
             received = socket.recv(1024)
             if received:
-                data.out += received # adds data to output queue
-            else: # end of test operation
-                print("Closing connection")
+                data.received += received # gets received data
+                print(f"Received from server: {received.decode()}")
+            else: # server closed connection
+                print("Server closed this connection")
                 self.sel.unregister(socket)
                 socket.close()
+                return
         if mask & selectors.EVENT_WRITE:
             if data.out:
-                print("Echoing")
+                print("Sending")
                 sent = socket.send(data.out)
                 data.out = data.out[sent:] # removes sent data from output queue
-        print(data.received)
         
 
-    def regular_test(self, file, code, connection):
+    def regular_test(self, file, code):
         # Basic echo functionality 
-        with connection:
-            connection, data = self.open_connection(code, connection)
+        # Open a new connection for each test
+        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        connection, data = self.open_connection(code, connection)
 
-            # event loop - should only run once per test
-            timeout_count = 0
-            max_timeout = 2 
+        writer = csv.writer(file, delimiter=' ')
+
+        # event loop - should only run once per test, but timeout is set to 10 to allow for some buffer
+        timeout_count = 0
+        max_timeout = 10
         
-            while timeout_count < max_timeout:
-                events = self.sel.select(timeout=1)
-                if not events:
-                    timeout_count += 1
-                    continue
+        while timeout_count < max_timeout:
+            events = self.sel.select(timeout=1)
+            if not events:
+                timeout_count += 1
+                continue
                 
-                for key, mask in events:
-                    self.process_connection(key, mask)
+            for key, mask in events:
+                self.process_connection(key, mask)
+                
                 
             # when finished processing
-                if not data.out and not data.received:
-                    break
+            if not data.out and data.received:
+                break
+        
+        if data.received:
+            writer.writerow(data.received)
 
-        self.sel.unregister(connection)
 
-
-    def multi_test(self, file, codes, connection):
+    def multi_test(self, file, codes):
         for code in codes:
-            self.regular_test(file, code, connection)
+            self.regular_test(file, code)
 
 
-    def run_handler(self, in_string, connection):
+    def run_handler(self, in_string):
         inputs = in_string.split()
         if not (inputs[0] == "-f"):
             print("Improperly entered command.")
@@ -101,14 +108,14 @@ class CLIInterface:
         file = open(inputs[1] + ".csv", "w")
         match(inputs[2]):
             case "-t":
-                self.regular_test(file, inputs[3], connection)
+                self.regular_test(file, inputs[3])
             case "-tm":
-                self.multi_test(file, inputs[3:], connection)
+                self.multi_test(file, inputs[3:])
             case default:
                 print("Improperly entered command.")
 
 
-    def json_hander(self, in_string, connection):
+    def json_hander(self, in_string):
         inputs = in_string.split()
         json_dict = None
 
@@ -126,31 +133,30 @@ class CLIInterface:
         try:
             file = open(json_dict['filename'] + ".csv", "w")
             if (json_dict['multitest']):
-                self.multi_test(file, json_dict['tests'], connection)
+                self.multi_test(file, json_dict['tests'])
             else:
-                self.regular_test(file, json_dict['test'], connection)
+                self.regular_test(file, json_dict['test'])
         except KeyError:
             print("JSON file was not formatted correctly. Please check the example config file.")
         
 
     def option_selector(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as connection:
-            while(True):
-                in_string = input(">>")
-                if (in_string == "help"):
-                    self.help_menu()
-                    continue
+        while(True):
+            in_string = input(">>")
+            if (in_string == "help"):
+                self.help_menu()
+                continue
 
-                if (in_string == "quit"):
-                    print("Goodbye.")
-                    break
+            if (in_string == "quit"):
+                print("Goodbye.")
+                break
 
-                if (in_string[:4] == "run "):
-                    self.run_handler(in_string[4:], connection)
-                elif (in_string[:5] == "runc "):
-                    self.json_hander(in_string[5:], connection)
-                else:
-                    print("You did something that caused an error or something that hasn't been implemented yet.")
+            if (in_string[:4] == "run "):
+                self.run_handler(in_string[4:])
+            elif (in_string[:5] == "runc "):
+                self.json_hander(in_string[5:])
+            else:
+                print("You did something that caused an error or something that hasn't been implemented yet.")
 
 
 print("-----------------------\nWelcome to the VT Baja Testing Interface!\n-----------------------\n")
