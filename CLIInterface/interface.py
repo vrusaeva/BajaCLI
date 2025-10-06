@@ -30,13 +30,13 @@ class CLIInterface:
         print("Example run command for multiple tests: run -f multi -tm a s")
         print("Example run from JSON: runc -f config")
 
-    def open_connection(self, connection):
+    def open_connection(self, code, connection):
         connection.setblocking(False)
         connection.connect_ex((self.HOST, self.PORT)) # suppress errors
 
         data = types.SimpleNamespace(
             id = 0,
-            message = "test",
+            message = "test" + code,
             received = b"",
             out = b"",
         )
@@ -60,17 +60,38 @@ class CLIInterface:
                 print("Echoing")
                 sent = socket.send(data.out)
                 data.out = data.out[sent:] # removes sent data from output queue
+        print(data.received)
         
 
     def regular_test(self, file, code, connection):
         # Basic echo functionality 
         with connection:
-            connection, data = self.open_connection(connection)
-            self.process_connection(connection, code, data)
+            connection, data = self.open_connection(code, connection)
+
+            # event loop - should only run once per test
+            timeout_count = 0
+            max_timeout = 2 
+        
+            while timeout_count < max_timeout:
+                events = self.sel.select(timeout=1)
+                if not events:
+                    timeout_count += 1
+                    continue
+                
+                for key, mask in events:
+                    self.process_connection(key, mask)
+                
+            # when finished processing
+                if not data.out and not data.received:
+                    break
+
+        self.sel.unregister(connection)
+
 
     def multi_test(self, file, codes, connection):
         for code in codes:
             self.regular_test(file, code, connection)
+
 
     def run_handler(self, in_string, connection):
         inputs = in_string.split()
@@ -85,6 +106,7 @@ class CLIInterface:
                 self.multi_test(file, inputs[3:], connection)
             case default:
                 print("Improperly entered command.")
+
 
     def json_hander(self, in_string, connection):
         inputs = in_string.split()
