@@ -1,5 +1,7 @@
 import json 
 import socket
+import selectors
+import types
 
 # Simple CLI-based interface to run VT Baja tests.
 # 
@@ -9,6 +11,8 @@ class CLIInterface:
     def __init__(self):
         self.HOST = "127.0.0.1"  # localhost
         self.PORT = 60161
+        self.events = selectors.EVENT_READ | selectors.EVENT_WRITE
+        self.sel = selectors.DefaultSelector()
     
     def take_input():
         in_string = input(">>")
@@ -26,18 +30,43 @@ class CLIInterface:
         print("Example run command for multiple tests: run -f multi -tm a s")
         print("Example run from JSON: runc -f config")
 
+    def open_connection(self, connection):
+        connection.setblocking(False)
+        connection.connect_ex((self.HOST, self.PORT)) # suppress errors
+
+        data = types.SimpleNamespace(
+            id = 0,
+            message = "test",
+            received = b"",
+            out = b"",
+        )
+
+        self.sel.register(connection, events=self.events, data=data)
+        return connection, data
+
+    def process_connection(self, key, mask):
+        socket = key.fileobj
+        data = key.data
+        if mask & selectors.EVENT_READ:
+            received = socket.recv(1024)
+            if received:
+                data.out += received # adds data to output queue
+            else: # end of test operation
+                print("Closing connection")
+                self.sel.unregister(socket)
+                socket.close()
+        if mask & selectors.EVENT_WRITE:
+            if data.out:
+                print("Echoing")
+                sent = socket.send(data.out)
+                data.out = data.out[sent:] # removes sent data from output queue
+        
+
     def regular_test(self, file, code, connection):
         # Basic echo functionality 
         with connection:
-            match(code):
-                case "a":
-                    connection.sendall(b"accel")
-                    print(connection.recv(1024))
-                case "s":
-                    connection.sendall(b"accel")
-                    print(connection.recv(1024))
-                case default:
-                    print("Not implemented")
+            connection, data = self.open_connection(connection)
+            self.process_connection(connection, code, data)
 
     def multi_test(self, file, codes, connection):
         for code in codes:
@@ -84,8 +113,6 @@ class CLIInterface:
 
     def option_selector(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as connection:
-            connection.connect((self.HOST, self.PORT))
-
             while(True):
                 in_string = input(">>")
                 if (in_string == "help"):
