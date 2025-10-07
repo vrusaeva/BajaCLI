@@ -38,7 +38,7 @@ class CLIInterface:
         data = types.SimpleNamespace(
             id = 0,
             message = code,
-            received = b"",
+            received = [],
             out = code.encode('utf-8'),
         )
 
@@ -51,7 +51,7 @@ class CLIInterface:
         if mask & selectors.EVENT_READ:
             received = socket.recv(1024)
             if received:
-                data.received += received # gets received data
+                data.received.append(received.decode()) # gets received data
                 print(f"Received from server: {received.decode()}")
             else: # server closed connection
                 print("Server closed this connection")
@@ -63,6 +63,7 @@ class CLIInterface:
                 print("Sending")
                 sent = socket.send(data.out)
                 data.out = data.out[sent:] # removes sent data from output queue
+        return data
         
 
     def regular_test(self, file, code):
@@ -70,8 +71,6 @@ class CLIInterface:
         # Open a new connection for each test
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection, data = self.open_connection(code, connection)
-
-        writer = csv.writer(file, delimiter=' ')
 
         # event loop - should only run once per test, but timeout is set to 10 to allow for some buffer
         timeout_count = 0
@@ -84,15 +83,21 @@ class CLIInterface:
                 continue
                 
             for key, mask in events:
-                self.process_connection(key, mask)
+                data = self.process_connection(key, mask)
                 
                 
             # when finished processing
             if not data.out and data.received:
+                print("Processed")
                 break
         
         if data.received:
-            writer.writerow(data.received)
+            with open(file=file, mode='w', newline='') as csvfile:
+                print(data.received)
+                writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                for message in data.received:
+                    writer.writerow([message])
+                
 
 
     def multi_test(self, file, codes):
@@ -105,7 +110,7 @@ class CLIInterface:
         if not (inputs[0] == "-f"):
             print("Improperly entered command.")
             return()
-        file = open(inputs[1] + ".csv", "w")
+        file = inputs[1] + ".csv"
         match(inputs[2]):
             case "-t":
                 self.regular_test(file, inputs[3])
@@ -131,7 +136,7 @@ class CLIInterface:
             return()
         
         try:
-            file = open(json_dict['filename'] + ".csv", "w")
+            file = json_dict['filename'] + ".csv"
             if (json_dict['multitest']):
                 self.multi_test(file, json_dict['tests'])
             else:
