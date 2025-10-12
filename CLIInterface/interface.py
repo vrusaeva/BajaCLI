@@ -7,7 +7,7 @@ import csv
 # Simple CLI-based interface to run VT Baja tests.
 # 
 # Author: vrusaeva
-# Version: v0.2 (9/19/2025)
+# Version: v0.3 (10/5/2025)
 class CLIInterface:
     def __init__(self):
         self.HOST = "127.0.0.1"  # localhost
@@ -66,7 +66,16 @@ class CLIInterface:
         return data
         
 
-    def regular_test(self, file, code):
+    def write(self, data, file):
+        if data.received:
+            with open(file=file, mode='w', newline='') as csvfile:
+                print(data.received)
+                writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                for message in data.received:
+                    writer.writerow([message])
+
+
+    def regular_test(self, file, code, single_test):
         # Basic echo functionality 
         # Open a new connection for each test
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -91,18 +100,29 @@ class CLIInterface:
                 print("Processed")
                 break
         
-        if data.received:
-            with open(file=file, mode='w', newline='') as csvfile:
-                print(data.received)
-                writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                for message in data.received:
-                    writer.writerow([message])
-                
+        if single_test:
+            self.write(data, file)
+
+        return data
+                  
+
+    def write_all(self, data_all, file):
+        with open(file=file, mode='w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            for data in data_all:
+                if(data.received):
+                    print(data.received)
+                    for message in data.received:
+                        writer.writerow([message])
 
 
     def multi_test(self, file, codes):
+        data_all = []
         for code in codes:
-            self.regular_test(file, code)
+            data_all.append(self.regular_test(file, code, False))
+            # reset selector to prevent conflicts
+            self.sel = selectors.DefaultSelector()
+        self.write_all(data_all, file)
 
 
     def run_handler(self, in_string):
@@ -113,7 +133,7 @@ class CLIInterface:
         file = inputs[1] + ".csv"
         match(inputs[2]):
             case "-t":
-                self.regular_test(file, inputs[3])
+                self.regular_test(file, inputs[3], True)
             case "-tm":
                 self.multi_test(file, inputs[3:])
             case default:
@@ -140,7 +160,7 @@ class CLIInterface:
             if (json_dict['multitest']):
                 self.multi_test(file, json_dict['tests'])
             else:
-                self.regular_test(file, json_dict['test'])
+                self.regular_test(file, json_dict['test'], True)
         except KeyError:
             print("JSON file was not formatted correctly. Please check the example config file.")
         
