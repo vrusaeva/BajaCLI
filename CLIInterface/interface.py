@@ -3,11 +3,12 @@ import socket
 import selectors
 import types
 import csv
+import traceback
 
 # Simple CLI-based interface to run VT Baja tests.
 # 
 # Author: vrusaeva
-# Version: v0.3 (10/5/2025)
+# Version: v0.4 (10/18/2025)
 class CLIInterface:
     def __init__(self):
         self.HOST = "127.0.0.1"  # localhost
@@ -20,27 +21,29 @@ class CLIInterface:
         return in_string
 
     def help_menu(self):
-        print("To run, use: run -f [CSV file name] -t [test code] -tm [multiple space separated test codes]\n")
-        print("To run from a JSON config fie, use: runc -f [config file name]")
-        print("Note: DO NOT add .csv or .json to the filename. Please only enter either -t or -tm.\n")
+        print("To run, use: run -f [one or more CSV filepaths] -t [one or more space separated test codes] \n")
+        print("For JSON options, please refer to the example config.json. To run from a JSON config fie, use: runc -f [config file name]")
+        print("Note: In this version, please add .csv and .json to all filenames.\n")
         print("Test codes: \n" \
         "- a = accelerometer test\n" \
         "- s = strain gauge test\n" \
         "More to be added later\n")
-        print("Example run command: run -f accel -t a")
-        print("Example run command for multiple tests: run -f multi -tm a s")
-        print("Example run from JSON: runc -f config")
+        print(r"Example run command: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel -t a")
+        print(r"Example run command for multiple tests: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel C:\Users\<your username>\OneDrive\Documents\BajaCLI\othertest.csv -tm a s")
+        print(r"Example run from JSON: runc -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\config.json")
 
-    def open_connection(self, code, connection):
+    def open_connection(self, codes, connection):
         connection.setblocking(False)
         connection.connect_ex((self.HOST, self.PORT)) # suppress errors
-
         data = types.SimpleNamespace(
-            id = 0,
-            message = code,
-            received = [],
-            out = code.encode('utf-8'),
+            out = bytearray(b""),
+            received = bytearray(b""),
+            files = []
         )
+        for code in codes:
+            data.out.extend((code + " ").encode("utf-8"))
+        data.out.extend(b"#")
+        
 
         self.sel.register(connection, events=self.events, data=data)
         return connection, data
@@ -51,8 +54,14 @@ class CLIInterface:
         if mask & selectors.EVENT_READ:
             received = socket.recv(1024)
             if received:
-                data.received.append(received.decode()) # gets received data
-                print(f"Received from server: {received.decode()}")
+                data.received.extend(received) # gets received data
+                decoded = data.received.decode()
+                if '#' in decoded:
+                    print("Completed receiving")
+                    end_index = decoded.index('#')
+                    decoded = decoded[:end_index]
+                    data.files = [file for file in decoded.split(';') if file.strip()]
+                    data.received.clear()
             else: # server closed connection
                 print("Server closed this connection")
                 self.sel.unregister(socket)
@@ -62,24 +71,26 @@ class CLIInterface:
             if data.out:
                 print("Sending")
                 sent = socket.send(data.out)
-                data.out = data.out[sent:] # removes sent data from output queue
-        return data
+                data.out = data.out[sent:]
         
 
-    def write(self, data, file):
-        if data.received:
+    def write(self, rcv_file, file):
+        if rcv_file:
+            rows = [row for row in rcv_file.split(r'\n') if row.strip()]
             with open(file=file, mode='w', newline='') as csvfile:
-                print(data.received)
-                writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                for message in data.received:
-                    writer.writerow([message])
+                writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                for row in rows:
+                    writer.writerow([el for el in row.split(',')])
+    
 
+    def test(self, files, codes):
+        # change codes to list if not already
+        if isinstance(codes, str):
+            codes = [codes]
 
-    def regular_test(self, file, code, single_test):
-        # Basic echo functionality 
-        # Open a new connection for each test
+        # open single connection to process all tests
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        connection, data = self.open_connection(code, connection)
+        connection, data = self.open_connection(codes, connection)
 
         # event loop - should only run once per test, but timeout is set to 10 to allow for some buffer
         timeout_count = 0
@@ -92,52 +103,32 @@ class CLIInterface:
                 continue
                 
             for key, mask in events:
-                data = self.process_connection(key, mask)
-                
+                self.process_connection(key, mask)     
                 
             # when finished processing
-            if not data.out and data.received:
+            if not data.out and data.files:
                 print("Processed")
                 break
+
+        self.sel.unregister(connection)
+        connection.close()
         
-        if single_test:
-            self.write(data, file)
-
-        return data
-                  
-
-    def write_all(self, data_all, file):
-        with open(file=file, mode='w', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            for data in data_all:
-                if(data.received):
-                    print(data.received)
-                    for message in data.received:
-                        writer.writerow([message])
-
-
-    def multi_test(self, file, codes):
-        data_all = []
-        for code in codes:
-            data_all.append(self.regular_test(file, code, False))
-            # reset selector to prevent conflicts
-            self.sel = selectors.DefaultSelector()
-        self.write_all(data_all, file)
-
+        for rcv_file, w_file in zip(data.files, files):
+            self.write(rcv_file, w_file)
+                
 
     def run_handler(self, in_string):
-        inputs = in_string.split()
-        if not (inputs[0] == "-f"):
-            print("Improperly entered command.")
-            return()
-        file = inputs[1] + ".csv"
-        match(inputs[2]):
-            case "-t":
-                self.regular_test(file, inputs[3], True)
-            case "-tm":
-                self.multi_test(file, inputs[3:])
-            case default:
+        try:
+            inputs = in_string.split()
+            if not (inputs[0] == "-f"):
                 print("Improperly entered command.")
+                return()
+            index = inputs.index("-t")
+            files = inputs[1 : index]
+            files = [file + ".csv" for file in files]
+            self.test(files, inputs[index + 1])
+        except Exception:
+            traceback.print_exc()
 
 
     def json_hander(self, in_string):
@@ -156,11 +147,11 @@ class CLIInterface:
             return()
         
         try:
-            file = json_dict['filename'] + ".csv"
+            files = [file for file in json_dict['filename']]
             if (json_dict['multitest']):
-                self.multi_test(file, json_dict['tests'])
+                self.test(files, json_dict['tests'])
             else:
-                self.regular_test(file, json_dict['test'], True)
+                self.test(files, json_dict['test'])
         except KeyError:
             print("JSON file was not formatted correctly. Please check the example config file.")
         

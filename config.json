@@ -6,5 +6,9 @@
   ],
   "multitest": false,
   "test": "a",
-  "filename": "accel"
+  "filenames": [
+    "accel",
+    "strain",
+    "bevel"
+  ]
 }

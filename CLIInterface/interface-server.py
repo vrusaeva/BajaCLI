@@ -1,6 +1,7 @@
 import socket
 import selectors
 import types
+import csv
 
 # Code for VT Baja interface server.
 # 
@@ -37,21 +38,56 @@ class Network:
         connection, address = socket.accept()
         print(address)
         connection.setblocking(False)
-        data = types.SimpleNamespace(addr=address, inp=b"", out=b"") 
+        data = types.SimpleNamespace(
+            addr=address, 
+            inp=bytearray(b""), 
+            out=bytearray(b""),
+            codes=[],
+            processed=False
+        ) 
         events = selectors.EVENT_READ | selectors.EVENT_WRITE # can communicate two ways with client sockets
         self.sel.register(connection, events=events, data=data)
+
+    def write_one(self, file, data):
+        reader = csv.reader(file, delimiter=',', quotechar='"')
+        for row in reader:
+            data.out.extend(",".join(row).encode('utf-8'))
+            # strip off last ,
+            data.out.extend(b"\n") # end of line
+        data.out.extend(b";") # end of file
+    
+    def build_output(self, code, data):
+        match(code):
+            case 'a':
+                with open(file = r"C:\Users\vrusa\OneDrive\Documents\BajaCLI\accel_2025-04-02_1.csv", mode = 'r') as file:
+                    self.write_one(file, data)
+            case 's':
+                with open(file = r"C:\Users\vrusa\OneDrive\Documents\BajaCLI\Trial_9.csv", mode = 'r') as file:
+                    self.write_one(file, data)
+            case 'b':
+                with open(file = r"C:\Users\vrusa\OneDrive\Documents\BajaCLI\Bevel_75_ft_lbs_1.csv", mode = 'r') as file:
+                    self.write_one(file, data)
+        
     
     def run_test(self, key, mask):
         socket = key.fileobj
         data = key.data
         if mask & selectors.EVENT_READ:
+            if (data.processed):
+                return
             received = socket.recv(1024)
-            # untested close operation
-            if received.decode() == "close":
-                print("Resetting server")
-                self.sel.close
             if received:
-                data.out += received # adds data to output queue
+                data.inp.extend(received) # adds data to input buffer
+                decoded = data.inp.decode()
+                if '#' in decoded:
+                    print("Completed receiving")
+                    end_index = decoded.index('#')
+                    decoded = decoded[:end_index]
+                    data.codes = [code for code in decoded.split(" ") if code.strip()]
+                    for code in data.codes:
+                        self.build_output(code, data)
+                    data.out.extend(b"#")
+                    data.processed = True
             else: # end of test operation
                 print("Closing connection")
                 self.sel.unregister(socket)
@@ -59,8 +95,7 @@ class Network:
                 return
         if mask & selectors.EVENT_WRITE:
             if data.out:
-                print("Echoing")
-                print(data.out)
+                print("Sending")
                 sent = socket.send(data.out)
                 data.out = data.out[sent:] # removes sent data from output queue
                 return
