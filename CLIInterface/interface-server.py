@@ -6,7 +6,7 @@ import csv
 # Code for VT Baja interface server.
 # 
 # Author: vrusaeva
-# Version: v0.4 (10/18/2025)
+# Version: v0.5 (10/18/2025)
 
 class Network:
     def __init__(self):
@@ -84,6 +84,7 @@ class Network:
                     end_index = decoded.index('#')
                     decoded = decoded[:end_index]
                     data.codes = [code for code in decoded.split(" ") if code.strip()]
+                    print(f"Number of codes: {len(data.codes)}")
                     for code in data.codes:
                         self.build_output(code, data)
                     data.out.extend(b"#")

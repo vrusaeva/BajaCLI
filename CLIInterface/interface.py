@@ -8,7 +8,7 @@ import traceback
 # Simple CLI-based interface to run VT Baja tests.
 # 
 # Author: vrusaeva
-# Version: v0.4 (10/18/2025)
+# Version: v0.5 (10/18/2025)
 class CLIInterface:
     def __init__(self):
         self.HOST = "127.0.0.1"  # localhost
@@ -59,8 +59,9 @@ class CLIInterface:
                 if '#' in decoded:
                     print("Completed receiving")
                     end_index = decoded.index('#')
-                    decoded = decoded[:end_index]
-                    data.files = [file for file in decoded.split(';') if file.strip()]
+                    message = decoded[:end_index]
+                    data.files = [file for file in message.split(';') if file.strip()]
+                    print(f"Processed {len(data.files)} datasets")
                     data.received.clear()
             else: # server closed connection
                 print("Server closed this connection")
@@ -112,8 +113,13 @@ class CLIInterface:
 
         self.sel.unregister(connection)
         connection.close()
-        
+
+        if (len(data.files) != len(files)):
+            print("WARNING: Server did not send back data for all requests. There may be a mismatch in data.")
+        print(f"Expected files: {len(files)}, Received datasets: {len(data.files)}")
+
         for rcv_file, w_file in zip(data.files, files):
+            print(f"Writing file {w_file}, data length: {len(rcv_file)}")
             self.write(rcv_file, w_file)
                 
 
@@ -125,8 +131,7 @@ class CLIInterface:
                 return()
             index = inputs.index("-t")
             files = inputs[1 : index]
-            files = [file + ".csv" for file in files]
-            self.test(files, inputs[index + 1])
+            self.test(files, inputs[index + 1:])
         except Exception:
             traceback.print_exc()
 
@@ -140,7 +145,7 @@ class CLIInterface:
             return()
         
         try:
-            with open(inputs[1] + '.json', 'r') as file:
+            with open(inputs[1], 'r') as file:
                 json_dict = json.load(file)
         except FileNotFoundError:
             print("Incorrect filename or file does not exist.")
