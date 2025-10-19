@@ -1,9 +1,8 @@
 Command-line interface to run testing on VT Baja SAE vehicles.
 
-Current status: Single-run echo server is functional on localhost.
+Current status: Server capable of sending multiple full CSV files to client using sample testing data. 
 
 TODO:
-- Implement continuous server connection
 - Display active sensors to user
-- Testing
+- Connection to sensors + testing
 - Create GUI

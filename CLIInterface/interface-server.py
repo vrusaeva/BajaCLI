@@ -6,7 +6,7 @@ import csv
 # Code for VT Baja interface server.
 # 
 # Author: vrusaeva
-# Version: v0.2 (9/19/2025)
+# Version: v0.4 (10/18/2025)
 
 class Network:
     def __init__(self):
