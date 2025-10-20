@@ -8,13 +8,15 @@ import traceback
 # Simple CLI-based interface to run VT Baja tests.
 # 
 # Author: vrusaeva
-# Version: v0.5 (10/18/2025)
+# Version: v0.6 (10/20/2025)
 class CLIInterface:
     def __init__(self):
         self.HOST = "127.0.0.1"  # localhost
         self.PORT = 60161
         self.events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.sel = selectors.DefaultSelector()
+        # placeholder code for now
+        self.active = ['Accelerometer', 'Strain', 'Bevel']
     
     def take_input():
         in_string = input(">>")
@@ -27,6 +29,7 @@ class CLIInterface:
         print("Test codes: \n" \
         "- a = accelerometer test\n" \
         "- s = strain gauge test\n" \
+        "- b = bevel test\n" \
         "More to be added later\n")
         print(r"Example run command: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel -t a")
         print(r"Example run command for multiple tests: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel.csv C:\Users\<your username>\OneDrive\Documents\BajaCLI\othertest.csv -tm a s")
@@ -90,6 +93,7 @@ class CLIInterface:
     
 
     def test(self, files, codes):
+        print(codes)
         # change codes to list if not already
         if isinstance(codes, str):
             codes = [codes]
@@ -159,7 +163,7 @@ class CLIInterface:
             return()
         
         try:
-            files = [file for file in json_dict['filename']]
+            files = [file for file in json_dict['filenames']]
             if (json_dict['multitest']):
                 self.test(files, json_dict['tests'])
             else:
@@ -170,6 +174,7 @@ class CLIInterface:
 
     def option_selector(self):
         while(True):
+            print("Current active sensors: " + ", ".join(self.active))
             in_string = input(">>")
             if (in_string == "help"):
                 self.help_menu()

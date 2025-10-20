@@ -7,7 +7,7 @@ import csv
 # Should be able to handle multiple test requests at once, but this is not yet tested.
 # 
 # Author: vrusaeva
-# Version: v0.5 (10/18/2025)
+# Version: v0.6 (10/20/2025)
 
 class Network:
     def __init__(self):

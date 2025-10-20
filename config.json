@@ -4,11 +4,11 @@
     "s",
     "b"
   ],
-  "multitest": false,
+  "multitest": true,
   "test": "a",
   "filenames": [
-    "accel",
-    "strain",
-    "bevel"
+    "C:/Users/vrusa/OneDrive/Documents/BajaCLI/accel.csv",
+    "C:/Users/vrusa/OneDrive/Documents/BajaCLI/strain.csv",
+    "C:/Users/vrusa/OneDrive/Documents/BajaCLI/bevel.csv"
   ]
 }
