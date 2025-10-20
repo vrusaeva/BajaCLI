@@ -35,16 +35,19 @@ class CLIInterface:
     def open_connection(self, codes, connection):
         connection.setblocking(False)
         connection.connect_ex((self.HOST, self.PORT)) # suppress errors
+        # data dict usable for all types of data storage
         data = types.SimpleNamespace(
             out = bytearray(b""),
             received = bytearray(b""),
             files = []
         )
+        # adds all codes to output buffer
         for code in codes:
             data.out.extend((code + " ").encode("utf-8"))
+        # adds exit character
         data.out.extend(b"#")
-        
 
+        # registers connection to selector
         self.sel.register(connection, events=self.events, data=data)
         return connection, data
 
@@ -56,12 +59,14 @@ class CLIInterface:
             if received:
                 data.received.extend(received) # gets received data
                 decoded = data.received.decode()
+                # when exit char is sent
                 if '#' in decoded:
                     print("Completed receiving")
                     end_index = decoded.index('#')
-                    message = decoded[:end_index]
-                    data.files = [file for file in message.split(';') if file.strip()]
+                    decoded = decoded[:end_index] # split off any unnecessary last chars
+                    data.files = [file for file in decoded.split(';') if file.strip()] # make sure no empty strings are processed to files
                     print(f"Processed {len(data.files)} datasets")
+                    # prevent reprocessing of data
                     data.received.clear()
             else: # server closed connection
                 print("Server closed this connection")
@@ -116,6 +121,7 @@ class CLIInterface:
 
         if (len(data.files) != len(files)):
             print("WARNING: Server did not send back data for all requests. There may be a mismatch in data.")
+            print("We recommend rerunning your request. If the issue persists, please contact support.")
         print(f"Expected files: {len(files)}, Received datasets: {len(data.files)}")
 
         for rcv_file, w_file in zip(data.files, files):
@@ -133,6 +139,7 @@ class CLIInterface:
             files = inputs[1 : index]
             self.test(files, inputs[index + 1:])
         except Exception:
+            print("Unexpected error in parsing command: ")
             traceback.print_exc()
 
 

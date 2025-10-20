@@ -4,6 +4,7 @@ import types
 import csv
 
 # Code for VT Baja interface server.
+# Should be able to handle multiple test requests at once, but this is not yet tested.
 # 
 # Author: vrusaeva
 # Version: v0.5 (10/18/2025)
@@ -38,6 +39,7 @@ class Network:
         connection, address = socket.accept()
         print(address)
         connection.setblocking(False)
+        # data dict usable for all data storage
         data = types.SimpleNamespace(
             addr=address, 
             inp=bytearray(b""), 
@@ -51,42 +53,49 @@ class Network:
     def write_one(self, file, data):
         reader = csv.reader(file, delimiter=',', quotechar='"')
         for row in reader:
+            # encode whole row at once
             data.out.extend(",".join(row).encode('utf-8'))
-            # strip off last ,
             data.out.extend(b"\n") # end of line
         data.out.extend(b";") # end of file
     
     def build_output(self, code, data):
+        # temporary code for now, should actually communicate with sensors to receive data
         match(code):
-            case 'a':
+            case 'a': # accelerometer
                 with open(file = r"C:\Users\vrusa\OneDrive\Documents\BajaCLI\accel_2025-04-02_1.csv", mode = 'r') as file:
                     self.write_one(file, data)
-            case 's':
+            case 's': # strain (using random file for now)
                 with open(file = r"C:\Users\vrusa\OneDrive\Documents\BajaCLI\Trial_9.csv", mode = 'r') as file:
                     self.write_one(file, data)
-            case 'b':
+            case 'b': # bevel
                 with open(file = r"C:\Users\vrusa\OneDrive\Documents\BajaCLI\Bevel_75_ft_lbs_1.csv", mode = 'r') as file:
                     self.write_one(file, data)
+            case default:
+                print("Unsupported code was sent to the server.")
         
     
     def run_test(self, key, mask):
         socket = key.fileobj
         data = key.data
         if mask & selectors.EVENT_READ:
+            # flag to prevent reprocessing of same data
             if (data.processed):
                 return
             received = socket.recv(1024)
             if received:
                 data.inp.extend(received) # adds data to input buffer
-                decoded = data.inp.decode()
+                decoded = data.inp.decode() # converts input buffer to string
+                # when exit char is sent
                 if '#' in decoded:
                     print("Completed receiving")
                     end_index = decoded.index('#')
-                    decoded = decoded[:end_index]
-                    data.codes = [code for code in decoded.split(" ") if code.strip()]
+                    decoded = decoded[:end_index] # strip off any unnecessary last characters
+                    data.codes = [code for code in decoded.split(" ") if code.strip()] # make sure no empty strings are used as codes
                     print(f"Number of codes: {len(data.codes)}")
+                    # adds output from each CSV file to overall output buffer
                     for code in data.codes:
                         self.build_output(code, data)
+                    # exit char when finished building output buffer
                     data.out.extend(b"#")
                     data.processed = True
             else: # end of test operation
@@ -97,7 +106,7 @@ class Network:
         if mask & selectors.EVENT_WRITE:
             if data.out:
                 print("Sending")
-                sent = socket.send(data.out)
+                sent = socket.send(data.out) # sends some amount of data bytes, may not send all at once
                 data.out = data.out[sent:] # removes sent data from output queue
                 return
 
@@ -105,12 +114,3 @@ class Network:
 nw = Network()
 nw.create_and_listen()
 nw.event_loop()
-
-
-# with connection:
-    # print(address)
-    # while(True):
-        # data = connection.recv(1024)
-        # if not data:
-            # break
-        # connection.sendall(data)
