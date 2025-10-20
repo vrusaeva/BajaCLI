@@ -29,7 +29,7 @@ class CLIInterface:
         "- s = strain gauge test\n" \
         "More to be added later\n")
         print(r"Example run command: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel -t a")
-        print(r"Example run command for multiple tests: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel C:\Users\<your username>\OneDrive\Documents\BajaCLI\othertest.csv -tm a s")
+        print(r"Example run command for multiple tests: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel.csv C:\Users\<your username>\OneDrive\Documents\BajaCLI\othertest.csv -tm a s")
         print(r"Example run from JSON: runc -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\config.json")
 
     def open_connection(self, codes, connection):
