@@ -6,10 +6,10 @@ class Splash(ui.element):
         super().__init__(tag='div')
         self.style('position: fixed; display: block; width: 100%; height: 100%;'
                    'top: 0; left: 0; right: 0; bottom: 0; z-index: 2; cursor: pointer;'
-                   'background-color:' + f'rgba{(134, 31, 65, 0.5)};')        
+                   'background-color:' + f'rgba{(134, 31, 65, 0.75)};')        
         with self:
             with ui.element('div').classes("h-screen flex items-center justify-center"):
-                ui.image('https://i.postimg.cc/jqWLZTXZ/Screenshot-2025-10-25-151405.png')
+                ui.image('https://i.postimg.cc/jqWLZTXZ/Screenshot-2025-10-25-151405.png').classes('h-auto max-w-4xl rounded-lg flex justify-center')
                 self.loader = ui.linear_progress(show_value=False, size='40px', color='crimson')
                 ui.label("Loading...").style("font-size: 50px; color: white; font-family: Lucida Console, Courier New, monospace")
                 
