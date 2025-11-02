@@ -31,8 +31,8 @@ class CLIInterface:
         "- s = strain gauge test\n" \
         "- b = bevel test\n" \
         "More to be added later\n")
-        print(r"Example run command: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel -t a")
-        print(r"Example run command for multiple tests: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel.csv C:\Users\<your username>\OneDrive\Documents\BajaCLI\othertest.csv -tm a s")
+        print(r"Example run command: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel.csv -t a")
+        print(r"Example run command for multiple tests: run -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\accel.csv C:\Users\<your username>\OneDrive\Documents\BajaCLI\othertest.csv -t a s")
         print(r"Example run from JSON: runc -f C:\Users\<your username>\OneDrive\Documents\BajaCLI\config.json")
 
     def open_connection(self, codes, connection):
@@ -120,7 +120,10 @@ class CLIInterface:
                 print("Processed")
                 break
 
+        # connection process finished - clean up
         self.sel.unregister(connection)
+        self.sel.close()
+        self.sel = selectors.DefaultSelector()
         connection.close()
 
         if (len(data.files) != len(files)):
@@ -142,10 +145,8 @@ class CLIInterface:
             index = inputs.index("-t")
             files = inputs[1 : index]
             self.test(files, inputs[index + 1:])
-        except Exception:
-            print("Unexpected error in parsing command: ")
-            traceback.print_exc()
-
+        except Exception as e:
+            raise Exception("Unexpected error in parsing command: {e}")
 
     def json_hander(self, in_string):
         inputs = in_string.split()
@@ -153,14 +154,13 @@ class CLIInterface:
 
         if not (inputs[0] == "-f"):
             print("Improperly entered command.")
-            return()
+            return("Improperly entered command.")
         
         try:
             with open(inputs[1], 'r') as file:
                 json_dict = json.load(file)
         except FileNotFoundError:
-            print("Incorrect filename or file does not exist.")
-            return()
+            raise FileNotFoundError("Incorrect filename or file does not exist.")
         
         try:
             files = [file for file in json_dict['filenames']]
@@ -169,7 +169,7 @@ class CLIInterface:
             else:
                 self.test(files, json_dict['test'])
         except KeyError:
-            print("JSON file was not formatted correctly. Please check the example config file.")
+            raise KeyError("JSON file was not formatted correctly. Please check the example config file.")
         
 
     def option_selector(self):

@@ -111,6 +111,6 @@ class Network:
                 return
 
 
-# nw = Network()
-# nw.create_and_listen()
-# nw.event_loop()
+nw = Network()
+nw.create_and_listen()
+nw.event_loop()
