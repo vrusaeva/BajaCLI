@@ -92,7 +92,11 @@ def run_tests():
 def from_config():
     global client
     in_string = '-f '
-    in_string += (json_field)
+    in_string += (json_field.value)
+    try:
+        client.json_handler(in_string)
+    except Exception as e:
+        print(e)
 
 @ui.page('/')
 async def index():
@@ -127,7 +131,7 @@ async def index():
         with ui.column().classes('ml-30 gap-16 items justify-center'):
             ui.label("Run from configuration: ").style("font-size: 40px; color: black; font-family: Lucida Console, Courier New, monospace")
             json_field = ui.input(placeholder=r"Ex: C:\Users\<your username>\...\config.json").classes('flex justify-center w-2xl border p-5').style('border-width: 5px')
-            ui.button('Run From Config', color = 'green').classes('flex justify-center w-2xl')
+            ui.button('Run From Config', color = 'green').classes('flex justify-center w-2xl').on('click', lambda: from_config())
         with ui.column():
             ui.label("Inactive Sensors:").style("font-size: 40px; color: black; font-family: Lucida Console, Courier New, monospace")
             for sensor in get_inactive():

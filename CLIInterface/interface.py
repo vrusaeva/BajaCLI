@@ -3,7 +3,6 @@ import socket
 import selectors
 import types
 import csv
-import traceback
 
 # Simple CLI-based interface to run VT Baja tests.
 # 
@@ -140,21 +139,19 @@ class CLIInterface:
         try:
             inputs = in_string.split()
             if not (inputs[0] == "-f"):
-                print("Improperly entered command.")
-                return()
+                raise Exception("Improperly entered command.")
             index = inputs.index("-t")
             files = inputs[1 : index]
             self.test(files, inputs[index + 1:])
         except Exception as e:
             raise Exception("Unexpected error in parsing command: {e}")
 
-    def json_hander(self, in_string):
+    def json_handler(self, in_string):
         inputs = in_string.split()
         json_dict = None
 
         if not (inputs[0] == "-f"):
-            print("Improperly entered command.")
-            return("Improperly entered command.")
+            raise Exception("Improperly entered command.")
         
         try:
             with open(inputs[1], 'r') as file:
@@ -190,7 +187,7 @@ class CLIInterface:
             if (in_string[:4] == "run "):
                 self.run_handler(in_string[4:])
             elif (in_string[:5] == "runc "):
-                self.json_hander(in_string[5:])
+                self.json_handler(in_string[5:])
             else:
                 print("You did something that caused an error or something that hasn't been implemented yet.")
 
