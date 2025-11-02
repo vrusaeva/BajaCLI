@@ -7,7 +7,7 @@ import csv
 # Simple CLI-based interface to run VT Baja tests.
 # 
 # Author: vrusaeva
-# Version: v0.6 (10/20/2025)
+# Version: v0.7 (11/02/2025)
 class CLIInterface:
     def __init__(self):
         self.HOST = "127.0.0.1"  # localhost

@@ -2,7 +2,12 @@ from nicegui import ui, app
 import asyncio
 import interface
 
-VERSION = '0.6'
+# GUI to interact with Baja CLI interface.
+# 
+# Author: vrusaeva
+# Version: v0.7 (11/02/2025)
+
+VERSION = '0.7'
 width = 0
 height = 0
 
