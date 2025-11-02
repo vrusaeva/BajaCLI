@@ -1,7 +1,10 @@
 from nicegui import ui, app
 import asyncio
+import interface, server
 
 VERSION = '0.6'
+width = 0
+height = 0
 
 class Splash(ui.element):
     def __init__(self):
@@ -31,17 +34,32 @@ def get_active():
 def get_inactive():
     return ["Consectetur", "Adipiscing", "Elit"]
 
+def was_resized(e):
+    global width 
+    width = e.args['width']
+    global height
+    height = e.args['height']
+    print(width)
+    print(height)
+
+
 @ui.page('/')
 async def index():
     async def slow():
         task = asyncio.create_task(overlay.show())
         await asyncio.sleep(4)
         overlay.hide()
-    
-    with ui.row().classes('w-full h-20 flex justify-center items-center gap-4'):
-        ui.label('Welcome to the VT Baja Testing Interface!').style("font-size: 50px; color: black; font-family: Lucida Console, Courier New, monospace; font-weight: bold").classes('flex justify-center')
 
-    with ui.grid(columns='1fr 2fr').classes('w-full h-full flex justify-left items-center gap-4'):
+    # Start the server and client
+    # client = interface.CLIInterface()
+    # sv = server.Network()
+    # sv.create_and_listen()
+    # sv.event_loop()
+
+    with ui.row().classes('w-full h-20 flex justify-center items-center gap-4'):
+        ui.label('Welcome to the VT Baja Testing Interface!').style("font-size: 50px; color: black; font-family: Lucida Console, Courier New, monospace; font-weight: bold").classes('w-full flex justify-center')
+
+    with ui.grid(columns='1fr 2fr', rows=2).classes('w-full h-full gap-4'):
         with ui.column():
             ui.label("Active Sensors:").style("font-size: 40px; color: black; font-family: Lucida Console, Courier New, monospace")
             with ui.grid(columns='10fr 1fr'):
@@ -67,5 +85,7 @@ async def index():
 
     overlay = Splash()
     app.on_connect(slow)
+
+
 
 ui.run()

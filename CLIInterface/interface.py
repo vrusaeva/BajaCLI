@@ -173,6 +173,9 @@ class CLIInterface:
         
 
     def option_selector(self):
+        print("-----------------------\nWelcome to the VT Baja Testing Interface!\n-----------------------\n")
+
+        print("Run a test or enter 'help' for help. Enter 'quit' to exit.\n")
         while(True):
             print("Current active sensors: " + ", ".join(self.active))
             in_string = input(">>")
@@ -191,11 +194,6 @@ class CLIInterface:
             else:
                 print("You did something that caused an error or something that hasn't been implemented yet.")
 
+# interface = CLIInterface()
 
-print("-----------------------\nWelcome to the VT Baja Testing Interface!\n-----------------------\n")
-
-print("Run a test or enter 'help' for help. Enter 'quit' to exit.\n")
-
-interface = CLIInterface()
-
-interface.option_selector()
+# interface.option_selector()
