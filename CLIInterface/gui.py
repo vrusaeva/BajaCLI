@@ -1,6 +1,8 @@
 from nicegui import ui, app
 import asyncio
 
+VERSION = '0.6'
+
 class Splash(ui.element):
     def __init__(self):
         super().__init__(tag='div')
@@ -19,10 +21,15 @@ class Splash(ui.element):
         for i in range(1000):
             self.loader.set_value(i/1000.0)
             await asyncio.sleep(0.001)
-            print(self.loader.value)
     
     def hide(self):
         self.set_visibility(False)
+
+def get_active():
+    return ["Accel", "Strain", "Bevel"]
+
+def get_inactive():
+    return ["Consectetur", "Adipiscing", "Elit"]
 
 @ui.page('/')
 async def index():
@@ -31,7 +38,33 @@ async def index():
         await asyncio.sleep(4)
         overlay.hide()
     
-    ui.label('wip')
+    with ui.row().classes('w-full h-20 flex justify-center items-center gap-4'):
+        ui.label('Welcome to the VT Baja Testing Interface!').style("font-size: 50px; color: black; font-family: Lucida Console, Courier New, monospace; font-weight: bold").classes('flex justify-center')
+
+    with ui.grid(columns='1fr 2fr').classes('w-full h-full flex justify-left items-center gap-4'):
+        with ui.column():
+            ui.label("Active Sensors:").style("font-size: 40px; color: black; font-family: Lucida Console, Courier New, monospace")
+            with ui.grid(columns='10fr 1fr'):
+                for sensor in get_active():
+                    ui.label("- " + sensor).style("font-size: 40px; color: green; font-family: Lucida Console, Courier New, monospace")
+                    ui.checkbox()
+            ui.button('Run Tests', color = 'green').classes('flex justify-center w-xl')
+        with ui.column().classes('ml-30 gap-16 items justify-center'):
+            ui.label("Run from configuration: ").style("font-size: 40px; color: black; font-family: Lucida Console, Courier New, monospace")
+            ui.input(placeholder="Enter a filename...").classes('flex justify-center w-2xl border p-5').style('border-width: 5px')
+            ui.button('Run From Config', color = 'green').classes('flex justify-center w-2xl')
+        with ui.column():
+            ui.label("Inactive Sensors:").style("font-size: 40px; color: black; font-family: Lucida Console, Courier New, monospace")
+            for sensor in get_inactive():
+                ui.label("- " + sensor).style("font-size: 40px; color: red; font-family: Lucida Console, Courier New, monospace")
+        with ui.column().classes('ml-30'):
+            ui.label('Result Filenames (Optional):').style("font-size: 30px; color: black; font-family: Lucida Console, Courier New, monospace")
+            ui.input(placeholder="Defaults to sensor names. Separate with commas.").classes('flex justify-center w-2xl border p-5').style('border-width: 5px')
+            ui.label("System Information").style("font-size: 30px; color: black; font-family: Lucida Console, Courier New, monospace")
+            ui.label("BajaCLI by vrusaeva v" + VERSION + " (alpha)").style("font-size: 20px; color: gray; font-family: Lucida Console, Courier New, monospace")
+            ui.label("https://github.com/vrusaeva/BajaCLI").style("font-size: 20px; color: gray; font-family: Lucida Console, Courier New, monospace")
+            ui.label("Please let me know of any issues!").style("font-size: 20px; color: gray; font-family: Lucida Console, Courier New, monospace")
+
     overlay = Splash()
     app.on_connect(slow)
 
