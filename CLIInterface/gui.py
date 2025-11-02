@@ -84,6 +84,7 @@ def run_tests():
             in_string += entry
     else: # use names of tests if no filepaths given
         for code in test_string[2:].split():
+            # configure these filepaths with your username and the location for your files!
             path = r'C:\Users\vrusa\OneDrive\Documents\BajaCLI\\' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv '
             filepaths.append(path)
             in_string += (r'C:\Users\vrusa\OneDrive\Documents\BajaCLI\\' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv ')
@@ -142,8 +143,8 @@ async def index():
             for sensor in get_inactive():
                 ui.label("- " + sensor).style("font-size: 40px; color: red; font-family: Lucida Console, Courier New, monospace")
         with ui.column().classes('ml-30'):
-            ui.label('Result Filenames (Optional):').style("font-size: 30px; color: black; font-family: Lucida Console, Courier New, monospace")
-            output_field = ui.input(placeholder=r"Ex. C:\Users\<your username>\...\accel.csv, C:\Users\<your username>\...\othertest.csv").classes('flex justify-center w-2xl border p-5').style('border-width: 5px')
+            ui.label('Result Filepaths (Optional):').style("font-size: 30px; color: black; font-family: Lucida Console, Courier New, monospace")
+            output_field = ui.input(label="Be sure to enter a path for every test you run to avoid errors!", placeholder=r"Ex. C:\Users\<your username>\...\accel.csv, C:\Users\<your username>\...\othertest.csv").classes('flex justify-center w-2xl border p-5').style('border-width: 5px')
             ui.label("System Information").style("font-size: 30px; color: black; font-family: Lucida Console, Courier New, monospace")
             ui.label("BajaCLI by vrusaeva v" + VERSION + " (alpha)").style("font-size: 20px; color: gray; font-family: Lucida Console, Courier New, monospace")
             ui.label("https://github.com/vrusaeva/BajaCLI").style("font-size: 20px; color: gray; font-family: Lucida Console, Courier New, monospace")

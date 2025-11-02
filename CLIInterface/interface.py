@@ -4,7 +4,7 @@ import selectors
 import types
 import csv
 
-# Simple CLI-based interface to run VT Baja tests.
+# Simple interface to run VT Baja tests.
 # 
 # Author: vrusaeva
 # Version: v0.7 (11/02/2025)
