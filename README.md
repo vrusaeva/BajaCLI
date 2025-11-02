@@ -15,6 +15,6 @@ Server capable of sending multiple full CSV files to client using sample testing
 4. Start the GUI (run gui.py) or command-line interface
 5. Run some tests! Monitor output on the command line for errors.
 
-TODO:
+## TODO
 - Connection to sensors + testing
 - Finish GUI (add other screens/better user notification of processes)
