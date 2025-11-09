@@ -18,7 +18,7 @@ valid_codes_dict = {"Accel": 'a', "Strain": 's', "Bevel": 'b'}
 boxes = []
 json_field = None
 output_field = None
-filepaths = [] # for output
+firstrun = True
 
 client = interface.CLIInterface()
 
@@ -70,9 +70,9 @@ def was_resized(e):
 def parse_output_field():
     return [string.strip() for string in output_field.value.split(',')]
 
-def run_tests():
+async def run_tests():
     global client
-    global filepaths
+    filepaths = []
     in_string = '-f '
     test_string = ('-t ')
     for i, box in enumerate(boxes):
@@ -92,6 +92,7 @@ def run_tests():
     print(in_string)
     try:
         client.run_handler(in_string)
+        return ', '.join(filepaths)
     except Exception as e:
         print(e)
 
@@ -111,6 +112,9 @@ async def index():
     global output_field
     global json_field
     global client
+    global firstrun
+    # make sure boxes are cleared
+    boxes.clear()
 
     async def slow():
         task = asyncio.create_task(overlay.show())
@@ -133,7 +137,7 @@ async def index():
                 for sensor in sensors_active:
                     ui.label("- " + sensor).style("font-size: 40px; color: green; font-family: Lucida Console, Courier New, monospace")
                     boxes.append(ui.checkbox())   
-            ui.button('Run Tests', color = 'green').classes('flex justify-center w-xl').on('click', lambda: run_tests())
+            ui.button('Run Tests', color = 'green').classes('flex justify-center w-xl').on('click', lambda: ui.navigate.to('/run'))
         with ui.column().classes('ml-30 gap-16 items justify-center'):
             ui.label("Run from configuration: ").style("font-size: 40px; color: black; font-family: Lucida Console, Courier New, monospace")
             json_field = ui.input(placeholder=r"Ex: C:\Users\<your username>\...\config.json").classes('flex justify-center w-2xl border p-5').style('border-width: 5px')
@@ -150,9 +154,24 @@ async def index():
             ui.label("https://github.com/vrusaeva/BajaCLI").style("font-size: 20px; color: gray; font-family: Lucida Console, Courier New, monospace")
             ui.label("Please let me know of any issues!").style("font-size: 20px; color: gray; font-family: Lucida Console, Courier New, monospace")
 
-    overlay = Splash()
-    app.on_connect(slow)
+    if (firstrun):
+        overlay = Splash()
+        app.on_connect(slow)
+        firstrun = False
 
+@ui.page('/run')
+async def run_page():
+    container = ui.column().classes('w-full h-full flex justify-center items-center gap-4')
 
+    with container:
+        ui.label("Running...").style("font-size: 40px; color: black; font-family: Lucida Console, Courier New, monospace")
+        complete_label = ui.label("temp").style("font-size: 40px; color: black; font-family: Lucida Console, Courier New, monospace")
+        back = ui.button('Back', color = 'green').classes('flex justify-center w-xl').on('click', lambda: ui.navigate.to('/'))
+        complete_label.set_visibility(False)
+        back.set_visibility(False)
+        filepaths = await run_tests()
+        complete_label.set_text(("Run complete. Saved results to " + filepaths))
+        complete_label.set_visibility(True)
+        back.set_visibility(True)
 
 ui.run()
