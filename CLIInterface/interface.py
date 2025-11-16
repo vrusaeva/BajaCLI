@@ -7,11 +7,12 @@ import csv
 # Simple interface to run VT Baja tests.
 # 
 # Author: vrusaeva
-# Version: v0.7 (11/02/2025)
+# Version: v0.8 (11/16/2025)
+
 class CLIInterface:
     def __init__(self):
         self.HOST = "127.0.0.1"  # localhost
-        self.PORT = 60161
+        self.PORT = 60162
         self.events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.sel = selectors.DefaultSelector()
         # placeholder code for now

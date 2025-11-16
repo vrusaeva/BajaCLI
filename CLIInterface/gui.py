@@ -1,13 +1,15 @@
 from nicegui import ui, app
 import asyncio
 import interface
+import traceback
+import sys, os
 
 # GUI to interact with Baja CLI interface.
 # 
 # Author: vrusaeva
-# Version: v0.7 (11/02/2025)
+# Version: v0.8 (11/16/2025)
 
-VERSION = '0.7'
+VERSION = '0.8'
 width = 0
 height = 0
 
@@ -22,6 +24,14 @@ firstrun = True
 
 client = interface.CLIInterface()
 
+def get_asset_path():
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, 'assets')
+    else:
+        return os.path.join(os.path.dirname(__file__), 'assets')
+
+app.add_static_files('/static-assets', get_asset_path())
+
 class Splash(ui.element):
     def __init__(self):
         super().__init__(tag='div')
@@ -30,16 +40,16 @@ class Splash(ui.element):
                    'background-color:' + f'rgba{(134, 31, 65, 0.75)};')        
         with self:
             with ui.element('div').classes("h-screen flex items-center justify-center"):
-                ui.image('https://i.postimg.cc/jqWLZTXZ/Screenshot-2025-10-25-151405.png').classes('h-auto max-w-4xl rounded-lg flex justify-center')
+                ui.image('/static-assets/splash_image.png').classes('h-auto max-w-4xl rounded-lg flex justify-center')
                 self.loader = ui.linear_progress(show_value=False, size='40px', color='crimson')
                 ui.label("Loading...").style("font-size: 50px; color: white; font-family: Lucida Console, Courier New, monospace")
                 
 
     async def show(self):
         self.set_visibility(True)
-        for i in range(1000):
-            self.loader.set_value(i/1000.0)
-            await asyncio.sleep(0.001)
+        for i in range(100):
+            self.loader.set_value(i/100.0)
+            await asyncio.sleep(0.01)
     
     def hide(self):
         self.set_visibility(False)
@@ -85,13 +95,14 @@ async def run_tests():
     else: # use names of tests if no filepaths given
         for code in test_string[2:].split():
             # configure these filepaths with your username and the location for your files!
-            path = r'C:\Users\vrusa\OneDrive\Documents\BajaCLI\\' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv '
+            path = r'C:\Users\vrusa\OneDrive\Documents\BajaCLI' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv '
             filepaths.append(path)
-            in_string += (r'C:\Users\vrusa\OneDrive\Documents\BajaCLI\\' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv ')
+            in_string += (r'C:\Users\vrusa\OneDrive\Documents\BajaCLI' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv ')
     in_string += test_string
     print(in_string)
     try:
         client.run_handler(in_string)
+        print("Run handler ran successfully")
         return ', '.join(filepaths)
     except Exception as e:
         print(e)
@@ -120,11 +131,6 @@ async def index():
         task = asyncio.create_task(overlay.show())
         await asyncio.sleep(4)
         overlay.hide()
-
-    # Start the server and client
-    # sv = server.Network()
-    # sv.create_and_listen()
-    # sv.event_loop()
 
     with ui.row().classes('w-full h-20 flex justify-center items-center gap-4'):
         ui.label('Welcome to the VT Baja Testing Interface!').style("font-size: 50px; color: black; font-family: Lucida Console, Courier New, monospace; font-weight: bold").classes('w-full flex justify-center')
@@ -174,4 +180,20 @@ async def run_page():
         complete_label.set_visibility(True)
         back.set_visibility(True)
 
-ui.run()
+def shutdown():
+    print("GUI closed, closing server...")
+
+def run_gui():
+    print("Starting GUI")
+    app.on_shutdown(shutdown)
+    try:
+        ui.run(reload=False)
+        print("Started GUI")
+    except Exception:
+        traceback.print_exc()
+
+# try:
+#     ui.run()
+# except Exception:
+#     traceback.print_exc()
+# app.on_shutdown(shutdown)

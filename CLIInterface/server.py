@@ -2,17 +2,18 @@ import socket
 import selectors
 import types
 import csv
+from multiprocessing import Event
 
 # Code for VT Baja interface server.
 # Should be able to handle multiple test requests at once, but this is not yet tested.
 # 
 # Author: vrusaeva
-# Version: v0.7 (11/02/2025)
+# Version: v0.8 (11/16/2025)
 
 class Network:
     def __init__(self):
         self.HOST = "127.0.0.1"  # localhost
-        self.PORT = 60161  
+        self.PORT = 60162  
         self.sel = selectors.DefaultSelector()
         self.ls = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
@@ -25,7 +26,7 @@ class Network:
     def event_loop(self):
         try:
             while True:
-                events = self.sel.select(timeout=None) # wait for clients to connect
+                events = self.sel.select(timeout=300) # wait for clients to connect
                 for key, mask in events:
                     if key.data is None:
                         self.accept_conn(key.fileobj) # listening socket
@@ -110,7 +111,8 @@ class Network:
                 data.out = data.out[sent:] # removes sent data from output queue
                 return
 
-
-nw = Network()
-nw.create_and_listen()
-nw.event_loop()
+def start_server():
+    nw = Network()
+    nw.create_and_listen()
+    print("Started server")
+    nw.event_loop()
