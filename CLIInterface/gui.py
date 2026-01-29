@@ -26,9 +26,9 @@ client = interface.CLIInterface()
 
 def get_asset_path():
     if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'assets')
+        return os.path.join(sys._MEIPASS, '../assets')
     else:
-        return os.path.join(os.path.dirname(__file__), 'assets')
+        return os.path.join(os.path.dirname(__file__), '../assets')
 
 app.add_static_files('/static-assets', get_asset_path())
 
@@ -95,9 +95,9 @@ async def run_tests():
     else: # use names of tests if no filepaths given
         for code in test_string[2:].split():
             # configure these filepaths with your username and the location for your files!
-            path = r'C:\Users\vrusa\OneDrive\Documents\BajaCLI' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv '
+            path = r'C:\Users\vrusa\OneDrive\Documents\BajaCLI\out' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv '
             filepaths.append(path)
-            in_string += (r'C:\Users\vrusa\OneDrive\Documents\BajaCLI' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv ')
+            in_string += (r'C:\Users\vrusa\OneDrive\Documents\BajaCLI\out' + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv ')
     in_string += test_string
     print(in_string)
     try:
@@ -187,7 +187,7 @@ def run_gui():
     print("Starting GUI")
     app.on_shutdown(shutdown)
     try:
-        ui.run(reload=False)
+        ui.run(reload=False, port=8084)
         print("Started GUI")
     except Exception:
         traceback.print_exc()
