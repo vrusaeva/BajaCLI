@@ -2,7 +2,9 @@ import socket
 import selectors
 import types
 import csv
+import os
 from multiprocessing import Event
+from dotenv import load_dotenv
 
 # Code for VT Baja interface server.
 # Should be able to handle multiple test requests at once, but this is not yet tested.
@@ -16,6 +18,9 @@ class Network:
         self.PORT = 60162  
         self.sel = selectors.DefaultSelector()
         self.ls = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        load_dotenv()
+        self.filepath = os.getenv("BASE_FILEPATH")
     
     def create_and_listen(self):
         self.ls.bind((self.HOST, self.PORT)) 
@@ -63,13 +68,13 @@ class Network:
         # temporary code for now, should actually communicate with sensors to receive data
         match(code):
             case 'a': # accelerometer
-                with open(file = r"C:\Users\vrusa\OneDrive\Documents\BajaCLI\accel_2025-04-02_1.csv", mode = 'r') as file:
+                with open(file = self.filepath + "accel_2025-04-02_1.csv", mode = 'r') as file:
                     self.write_one(file, data)
             case 's': # strain (using random file for now)
-                with open(file = r"C:\Users\vrusa\OneDrive\Documents\BajaCLI\Trial_9.csv", mode = 'r') as file:
+                with open(file = self.filepath + "Trial_9.csv", mode = 'r') as file:
                     self.write_one(file, data)
             case 'b': # bevel
-                with open(file = r"C:\Users\vrusa\OneDrive\Documents\BajaCLI\Bevel_75_ft_lbs_1.csv", mode = 'r') as file:
+                with open(file = self.filepath + "Bevel_75_ft_lbs_1.csv", mode = 'r') as file:
                     self.write_one(file, data)
             case default:
                 print("Unsupported code was sent to the server.")

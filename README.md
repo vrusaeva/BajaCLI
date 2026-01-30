@@ -11,8 +11,9 @@ Server capable of sending and receiving data on localhost. GUI up on localhost u
 ## Usage
 1. Clone the repo
 2. Configure the ports for the client and server as necessary
-3. Run the launch.py script OR on Windows: run launch.exe in the dist folder to start the server and GUI.
-4. Run some tests! Monitor output on the command line for errors.
+3. Update the .env file with your filepath
+4. Run the launch.py script OR on Windows: run launch.exe in the dist folder to start the server and GUI.
+5. Run some tests! Monitor output on the command line for errors.
 
 ## TODO
 - Connection to sensors + testing
