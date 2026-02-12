@@ -1,8 +1,4 @@
-import json 
-import socket
-import selectors
-import types
-import csv
+import json, socket, selectors, types, csv, os
 
 # Simple interface to run VT Baja tests.
 # 
@@ -11,8 +7,8 @@ import csv
 
 class CLIInterface:
     def __init__(self):
-        self.HOST = "127.0.0.1"  # localhost
-        self.PORT = 60162
+        self.HOST = os.getenv("SERVER_HOST")  # localhost
+        self.PORT = os.getenv("SERVER_PORT")
         self.events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.sel = selectors.DefaultSelector()
         # placeholder code for now

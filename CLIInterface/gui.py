@@ -1,8 +1,5 @@
 from nicegui import ui, app
-import asyncio
-import interface
-import traceback
-import sys, os
+import asyncio, interface, traceback, sys, os
 from dotenv import load_dotenv
 
 # GUI to interact with Baja CLI interface.

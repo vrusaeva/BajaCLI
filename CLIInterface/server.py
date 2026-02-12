@@ -1,8 +1,4 @@
-import socket
-import selectors
-import types
-import csv
-import os
+import socket, selectors, types, csv, os
 from multiprocessing import Event
 from dotenv import load_dotenv
 
@@ -14,8 +10,8 @@ from dotenv import load_dotenv
 
 class Network:
     def __init__(self):
-        self.HOST = "127.0.0.1"  # localhost
-        self.PORT = 60162  
+        self.HOST = os.getenv("SERVER_HOST")  
+        self.PORT = os.getenv("SERVER_PORT")  
         self.sel = selectors.DefaultSelector()
         self.ls = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
