@@ -12,7 +12,7 @@ class Network:
     def __init__(self):
         load_dotenv()
         self.HOST = os.getenv("SERVER_HOST")  
-        self.PORT = os.getenv("SERVER_PORT")  
+        self.PORT = int(os.getenv("SERVER_PORT"))
         self.sel = selectors.DefaultSelector()
         self.ls = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.filepath = os.getenv("BASE_FILEPATH")
