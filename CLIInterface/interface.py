@@ -1,4 +1,5 @@
 import json, socket, selectors, types, csv, os
+from dotenv import load_dotenv
 
 # Simple interface to run VT Baja tests.
 # 
@@ -7,8 +8,9 @@ import json, socket, selectors, types, csv, os
 
 class CLIInterface:
     def __init__(self):
+        load_dotenv()
         self.HOST = os.getenv("SERVER_HOST")  # localhost
-        self.PORT = os.getenv("SERVER_PORT")
+        self.PORT = int(os.getenv("SERVER_PORT"))
         self.events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.sel = selectors.DefaultSelector()
         # placeholder code for now
@@ -188,6 +190,6 @@ class CLIInterface:
             else:
                 print("You did something that caused an error or something that hasn't been implemented yet.")
 
-# interface = CLIInterface()
-
-# interface.option_selector()
+if (__name__ == "__main__"):
+    interface = CLIInterface()
+    interface.option_selector()
