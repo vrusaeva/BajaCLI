@@ -192,8 +192,5 @@ def run_gui():
     except Exception:
         traceback.print_exc()
 
-# try:
-#     ui.run()
-# except Exception:
-#     traceback.print_exc()
-# app.on_shutdown(shutdown)
+if(__name__ == "__main__"):
+    run_gui()
