@@ -3,10 +3,10 @@ from multiprocessing import Event
 from dotenv import load_dotenv
 
 # Code for VT Baja interface server.
-# Should be able to handle multiple test requests at once, but this is not yet tested.
+# Can run on local machine or on remote device.
 # 
 # Author: vrusaeva
-# Version: v0.8 (11/16/2025)
+# Version: v0.9 (02/11/2026)
 
 class Network:
     def __init__(self):
@@ -15,7 +15,7 @@ class Network:
         self.PORT = int(os.getenv("SERVER_PORT"))
         self.sel = selectors.DefaultSelector()
         self.ls = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.filepath = os.getenv("BASE_FILEPATH")
+        self.filepath = os.getenv("BASE_FILEPATH_INPUT")
     
     def create_and_listen(self):
         self.ls.bind((self.HOST, self.PORT)) 

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 # Simple interface to run VT Baja tests.
 # 
 # Author: vrusaeva
-# Version: v0.8 (11/16/2025)
+# Version: v0.9 (02/11/2026)
 
 class CLIInterface:
     def __init__(self):
@@ -190,6 +190,7 @@ class CLIInterface:
             else:
                 print("You did something that caused an error or something that hasn't been implemented yet.")
 
+# just use this to run interface
 if (__name__ == "__main__"):
     interface = CLIInterface()
     interface.option_selector()

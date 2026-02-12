@@ -5,9 +5,9 @@ from dotenv import load_dotenv
 # GUI to interact with Baja CLI interface.
 # 
 # Author: vrusaeva
-# Version: v0.8 (11/16/2025)
+# Version: v0.9 (02/11/2026)
 
-VERSION = '0.8'
+VERSION = '0.9'
 width = 0
 height = 0
 
@@ -83,8 +83,10 @@ async def run_tests():
     filepaths = []
     in_string = '-f '
     test_string = ('-t ')
+
     load_dotenv()
-    base_path = os.getenv("BASE_FILEPATH")
+    base_path = os.getenv("BASE_FILEPATH_OUTPUT")
+    
     for i, box in enumerate(boxes):
         if box.value == True:
             test_string += ac_codes[i]
@@ -94,7 +96,6 @@ async def run_tests():
             in_string += entry
     else: # use names of tests if no filepaths given
         for code in test_string[2:].split():
-            # configure these filepaths with your username and the location for your files!
             path = base_path + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv '
             filepaths.append(path)
             in_string += (base_path + [k for k, v in valid_codes_dict.items() if v == code][0] + '.csv ')
