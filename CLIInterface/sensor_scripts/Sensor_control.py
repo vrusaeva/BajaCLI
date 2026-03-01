@@ -1,4 +1,4 @@
-import temp_sens
+from sensor_scripts import temp_sens
 # import linear_potentiometer as lp
 import ctypes
 import datetime as date
