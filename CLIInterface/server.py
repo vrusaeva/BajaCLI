@@ -116,3 +116,6 @@ def start_server():
     nw.create_and_listen()
     print("Started server")
     nw.event_loop()
+
+if (__name__ == "__main__"):
+    start_server()
