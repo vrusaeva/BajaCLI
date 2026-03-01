@@ -1,6 +1,7 @@
 import socket, selectors, types, csv, os
 from multiprocessing import Event
 from dotenv import load_dotenv
+from sensor_scripts import Sensor_control
 
 # Code for VT Baja interface server.
 # Can run on local machine or on remote device.
@@ -63,7 +64,7 @@ class Network:
         # temporary code for now, should actually communicate with sensors to receive data
         match(code):
             case 'a': # accelerometer
-                with open(file = self.filepath + "accel_2025-04-02_1.csv", mode = 'r') as file:
+                with open(file = Sensor_control.main(), mode = 'r') as file:
                     self.write_one(file, data)
             case 's': # strain (using random file for now)
                 with open(file = self.filepath + "Trial_9.csv", mode = 'r') as file:
