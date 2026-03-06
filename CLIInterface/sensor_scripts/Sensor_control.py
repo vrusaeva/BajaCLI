@@ -1,9 +1,14 @@
 from sensor_scripts import temp_sens
-# import linear_potentiometer as lp
+import linear_potentiometer as lp
 import ctypes
 import datetime as date
 import time, os, csv
 from dotenv import load_dotenv
+
+# try to figure out how to simulate the sensors and pass the objects back
+# debug flag? figure out how to do in python
+# reference documents from Trello
+# use random csv of ints 0-1024 for potentiometer
 
 def main(out_file_name):
     # Load the shared library
@@ -94,11 +99,11 @@ def main(out_file_name):
                 accelerometer = accel.accel_on(ctypes.byref(status))
 
                 #Initalize the linear potentiometers
-                # pot = lp.init_pot()
+                pot = lp.init_pot()
 
                 with open(file = filepath + out_file_name, mode='w') as file:
                     writer = csv.writer(file, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                    writer.writerow(["Temperature", "x", "y", "z"])
+                    writer.writerow(["Temperature", "x-accel", "y-accel", "z-accel", "fr", "fl", "rr", "rl"])
                     #Will record as long as the button is flipped to the on state
                     while record():
                         #Start calling the recording funtions to get the data
@@ -111,16 +116,16 @@ def main(out_file_name):
 
                         #Read the position data from the linear potetiometers
                         #Reads data out as a list
-                        # lin_data = lp.pot_read(pot)
+                        lin_data = lp.pot_read(pot)
 
                         #In the future we will write these values to a file
 
                         # print(f"Temperature: {temp[1]}")
                         # print(f"x={acceleration.x}, y={acceleration.y}, z={acceleration.z}")
-                        # print('fr:',lin_data[0].value,', fl:',lin_data[1].value) #', rr:',lin_data[2].value,', rl:',lin_data[3].value,'\n')
+                        print('fr:',lin_data[0].value,', fl:',lin_data[1].value) #', rr:',lin_data[2].value,', rl:',lin_data[3].value,'\n')
                         # print('\n')
                         # write to a CSV file
-                        writer.writerow([temp[1], acceleration.x, acceleration.y, acceleration.z])
+                        writer.writerow([temp[1], acceleration.x, acceleration.y, acceleration.z, lin_data[0].value, lin_data[1].value, lin_data[2].value, lin_data[3].value])
 
                         
                     #Record came back as false and now we stop recording and close out all of the sensors
