@@ -64,7 +64,7 @@ class Network:
         # temporary code for now, should actually communicate with sensors to receive data
         match(code):
             case 'a': # accelerometer
-                with open(file = Sensor_control.main(), mode = 'r') as file:
+                with open(file = Sensor_control.main("accel_output"), mode = 'r') as file:
                     self.write_one(file, data)
             case 's': # strain (using random file for now)
                 with open(file = self.filepath + "Trial_9.csv", mode = 'r') as file:

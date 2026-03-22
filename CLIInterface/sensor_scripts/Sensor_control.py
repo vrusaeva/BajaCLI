@@ -2,7 +2,7 @@ from sensor_scripts import temp_sens
 import linear_potentiometer as lp
 import ctypes
 import datetime as date
-import time, os, csv
+import os, csv
 from dotenv import load_dotenv
 
 # try to figure out how to simulate the sensors and pass the objects back
@@ -11,11 +11,14 @@ from dotenv import load_dotenv
 # use random csv of ints 0-1024 for potentiometer
 
 def main(out_file_name):
+    # check if we are in live or sim mode
+    load_dotenv()
+    is_live = (os.getenv("SENSOR_MODE").strip().lower() == "live")
+
     # Load the shared library
     accel = ctypes.CDLL('./accelerometer.so')
 
 
-    load_dotenv()
     filepath = os.getenv("BASE_FILEPATH_OUTPUT")
 
 
@@ -96,28 +99,58 @@ def main(out_file_name):
                 acceleration = mma8451_acceleration(x=0.0, y=0.0, z=0.0)
 
                 #Turn on the accelerometer and prepare to recieve values
-                accelerometer = accel.accel_on(ctypes.byref(status))
+                if is_live: 
+                    accelerometer = accel.accel_on(ctypes.byref(status))
 
                 #Initalize the linear potentiometers
                 pot = lp.init_pot()
 
-                with open(file = filepath + out_file_name, mode='w') as file:
+                with open(file = filepath + out_file_name, mode='w') as file, open(file = './sim_files/accel.csv') as sim_accel, open(file = './sim_files/temp.csv') as sim_temp, open(file = './sim_files/lp.csv') as sim_lp:
                     writer = csv.writer(file, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
                     writer.writerow(["Temperature", "x-accel", "y-accel", "z-accel", "fr", "fl", "rr", "rl"])
+                    accel_reader = csv.reader(sim_accel, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                    next(accel_reader)
+                    temp_reader = csv.reader(sim_temp, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                    next(temp_reader)
+                    lp_reader = csv.reader(sim_lp, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                    next(lp_reader)
+
                     #Will record as long as the button is flipped to the on state
                     while record():
                         #Start calling the recording funtions to get the data
-
-                        #Read the acceleration
-                        acceleration = accel.read_accel(accelerometer)
+                        temp = 0
+                        lin_data = [0, 0, 0, 0]
                         
-                        #Read the temperature
-                        temp = temp_sens.read_temp()
+                        if is_live:
+                            #Read the acceleration
+                            acceleration = accel.read_accel(accelerometer)
+                            #Read the temperature
+                            temp = temp_sens.read_temp()
+                             #Read the position data from the linear potetiometers
+                            #Reads data out as a list
+                            lin_data = lp.pot_read(pot)
+                        else:
+                            # read from accel file
+                            line = next(accel_reader)
+                            if not line:
+                                break
+                            acceleration.x = line[0]
+                            acceleration.y = line[1]
+                            acceleration.z = line[2]
 
-                        #Read the position data from the linear potetiometers
-                        #Reads data out as a list
-                        lin_data = lp.pot_read(pot)
+                            # read from temp file
+                            line = next(temp_reader)
+                            if not line:
+                                break
+                            temp = line[0]
 
+                            # read from potentiometer file
+                            line = next(lp_reader)
+                            if not line:
+                                break
+                            # convert to dict to simulate analogin type
+                            lin_data = [lp.SimAnalog(line[0]), lp.SimAnalog(line[1]), lp.SimAnalog(line[2]), lp.SimAnalog(line[3])]
+                        
                         #In the future we will write these values to a file
 
                         # print(f"Temperature: {temp[1]}")
@@ -125,7 +158,7 @@ def main(out_file_name):
                         print('fr:',lin_data[0].value,', fl:',lin_data[1].value) #', rr:',lin_data[2].value,', rl:',lin_data[3].value,'\n')
                         # print('\n')
                         # write to a CSV file
-                        writer.writerow([temp[1], acceleration.x, acceleration.y, acceleration.z, lin_data[0].value, lin_data[1].value, lin_data[2].value, lin_data[3].value])
+                        writer.writerow([temp, acceleration.x, acceleration.y, acceleration.z, lin_data[0].value, lin_data[1].value, lin_data[2].value, lin_data[3].value])
 
                         
                     #Record came back as false and now we stop recording and close out all of the sensors

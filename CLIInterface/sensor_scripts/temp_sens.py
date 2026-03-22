@@ -1,13 +1,18 @@
 import os
 import glob
 import time
+from dotenv import load_dotenv
+
+# check if we are in live or sim mode
+load_dotenv()
+is_live = True if os.getenv("SENSOR_MODE") == "live" else False
 
 # These tow lines mount the device and make it connect easier:
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
  
 #This is where the temp sensor is sending data too
-temp_file = "/sys/bus/w1/devices/28-000000379b4d/w1_slave"
+temp_file = "/sys/bus/w1/devices/28-000000379b4d/w1_slave" if is_live else "./sim_files/temp.csv"
 
 #This reads the raw output from the temperature sensor
 def read_temp_raw():
