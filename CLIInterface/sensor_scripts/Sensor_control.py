@@ -13,7 +13,9 @@ from dotenv import load_dotenv
 def main(out_file_name):
     # check if we are in live or sim mode
     load_dotenv()
-    is_live = (os.getenv("SENSOR_MODE").strip().lower() == "live")
+    live_accel = os.getenv("ACCEL_LIVE") == "true"
+    live_pots = os.getenv("POTS_LIVE") == "true"
+    live_temp = os.getenv("TEMP_LIVE") == "true"
 
     # Load the shared library
     accel = ctypes.CDLL('./accelerometer.so')
@@ -99,7 +101,7 @@ def main(out_file_name):
                 acceleration = mma8451_acceleration(x=0.0, y=0.0, z=0.0)
 
                 #Turn on the accelerometer and prepare to recieve values
-                if is_live: 
+                if live_accel: 
                     accelerometer = accel.accel_on(ctypes.byref(status))
 
                 #Initalize the linear potentiometers
@@ -121,14 +123,9 @@ def main(out_file_name):
                         temp = 0
                         lin_data = [0, 0, 0, 0]
                         
-                        if is_live:
+                        if live_accel:
                             #Read the acceleration
                             acceleration = accel.read_accel(accelerometer)
-                            #Read the temperature
-                            temp = temp_sens.read_temp()
-                             #Read the position data from the linear potetiometers
-                            #Reads data out as a list
-                            lin_data = lp.pot_read(pot)
                         else:
                             # read from accel file
                             line = next(accel_reader)
@@ -137,13 +134,22 @@ def main(out_file_name):
                             acceleration.x = line[0]
                             acceleration.y = line[1]
                             acceleration.z = line[2]
-
+                        
+                        if live_temp:
+                            #Read the temperature
+                            temp = temp_sens.read_temp()
+                        else:
                             # read from temp file
                             line = next(temp_reader)
                             if not line:
                                 break
                             temp = line[0]
 
+                        if live_pots:
+                            #Read the position data from the linear potetiometers
+                            #Reads data out as a list
+                            lin_data = lp.pot_read(pot)
+                        else:
                             # read from potentiometer file
                             line = next(lp_reader)
                             if not line:
