@@ -1,5 +1,5 @@
 from sensor_scripts import temp_sens
-import linear_potentiometer as lp
+from sensor_scripts import linear_potentiometer as lp
 import ctypes
 import datetime as date
 import os, csv
