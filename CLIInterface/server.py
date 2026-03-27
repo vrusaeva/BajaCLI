@@ -68,10 +68,10 @@ class Network:
                 with open(file = Sensor_control.main("accel_output"), mode = 'r') as file:
                     self.write_one(file, data)
             case 's': # strain (using random file for now)
-                with open(file = os.path.join(self.cwd, "sensor_scripts", "Trial_9.csv"), mode = 'r') as file:
+                with open(file = os.path.join(self.cwd, "sensor_scripts", "sim_files", "Trial_9.csv"), mode = 'r') as file:
                     self.write_one(file, data)
             case 'b': # bevel
-                with open(file = os.path.join(self.cwd, "sensor_scripts", "Bevel_75_ft_lbs_1.csv"), mode = 'r') as file:
+                with open(file = os.path.join(self.cwd, "sensor_scripts", "sim_files", "Bevel_75_ft_lbs_1.csv"), mode = 'r') as file:
                     self.write_one(file, data)
             case default:
                 print("Unsupported code was sent to the server.")
