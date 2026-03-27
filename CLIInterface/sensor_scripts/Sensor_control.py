@@ -17,8 +17,10 @@ def main(out_file_name):
     live_pots = os.getenv("POTS_LIVE") == "true"
     live_temp = os.getenv("TEMP_LIVE") == "true"
 
+    cwd = os.getcwd()
+
     # Load the shared library
-    accel = ctypes.CDLL(os.path.join(os.getcwd(), 'accelerometer.so'))
+    accel = ctypes.CDLL(os.path.join(cwd, 'accelerometer.so'))
 
 
     filepath = os.getenv("BASE_FILEPATH_OUTPUT")
