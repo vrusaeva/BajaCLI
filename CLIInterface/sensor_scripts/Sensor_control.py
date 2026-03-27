@@ -17,7 +17,8 @@ def main(out_file_name):
     live_pots = os.getenv("POTS_LIVE") == "true"
     live_temp = os.getenv("TEMP_LIVE") == "true"
 
-    cwd = os.getcwd()
+    # change to 
+    cwd = os.getenv("ACCEL_SCRIPT_SRC")
 
     # Load the shared library
     accel = ctypes.CDLL(os.path.join(cwd, 'accelerometer.so'))
