@@ -17,6 +17,7 @@ class Network:
         self.sel = selectors.DefaultSelector()
         self.ls = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.filepath = os.getenv("BASE_FILEPATH_INPUT")
+        self.cwd = os.getcwd()
     
     def create_and_listen(self):
         self.ls.bind((self.HOST, self.PORT)) 
@@ -67,10 +68,10 @@ class Network:
                 with open(file = Sensor_control.main("accel_output"), mode = 'r') as file:
                     self.write_one(file, data)
             case 's': # strain (using random file for now)
-                with open(file = self.filepath + "Trial_9.csv", mode = 'r') as file:
+                with open(file = os.path.join(self.cwd, "sensor_scripts", "Trial_9.csv"), mode = 'r') as file:
                     self.write_one(file, data)
             case 'b': # bevel
-                with open(file = self.filepath + "Bevel_75_ft_lbs_1.csv", mode = 'r') as file:
+                with open(file = os.path.join(self.cwd, "sensor_scripts", "Bevel_75_ft_lbs_1.csv"), mode = 'r') as file:
                     self.write_one(file, data)
             case default:
                 print("Unsupported code was sent to the server.")
