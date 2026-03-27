@@ -18,7 +18,7 @@ def main(out_file_name):
     live_temp = os.getenv("TEMP_LIVE") == "true"
 
     # Load the shared library
-    accel = ctypes.CDLL('./accelerometer.so')
+    accel = ctypes.CDLL(os.path.join(os.getcwd(), 'accelerometer.so'))
 
 
     filepath = os.getenv("BASE_FILEPATH_OUTPUT")
